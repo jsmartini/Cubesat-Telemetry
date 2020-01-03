@@ -5,6 +5,12 @@ import os
 import json
 from datetime import datetime
 
+
+"""
+                    THIS IS ALL SUBJECt to CHANGE WILL PROBABLY GET THROWN
+
+"""
+
 class device_interface(serial.Serial):
 
     def __init__(self,device: "str", data_label: "str", BaudRate = 9600, bytesize = serial.EIGHTBITS, stopbits = serial.STOPBITS_ONE):

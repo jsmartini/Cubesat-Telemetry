@@ -2,7 +2,6 @@ import serial
 import json
 import time
 
-
 def generate_config(radioMode = "Endpoint", rfDataRate = "RATE_1M", txPower=10, networkId = 77777, frequencyKey=0, radioFrequency=915.0000, radioHoppingMode="Hopping_On", beaconInterval=ONE_HUNDRED_MS, beaconBurstCount=1, lnaBypass=0, maxLinkDistanceInMiles=5, maxPacketSize=900, cliBaudRate=115200, packetizedBaudRate=3000000, passthruBaudRate = 3000000, databits=8, parity="None", stopbits=1, flowControl="Hardware", passthruLatencyMode="auto", passthruLatencyTimer=16):
     return {
         "radioSettings":[
@@ -48,8 +47,17 @@ class zumlink(serial.Serial):
             exit(-1)
         else:
             print("Device Configured")
-    
-    def debugTerminal(self):
+
+    def getDeviceSettings(self):
+        #function pulls basic settings off of the device        
+        info = {}
+        info["firmware"] = commandRes("FirmwareVersion")
+        info["name"]     = commandRes("deviceName")
+        info["Serial"]   = commandRes("deviceSerialNumber")
+        return info
+
+    def Terminal(self):
+        #interactive terminal to issue commands to the device in an interactive mode
         if super.isOpen():
             print("Zumlink Terminal Mode\r\ntype exit() to leave, send() for transmit prompt")
             while 1:
@@ -69,10 +77,12 @@ class zumlink(serial.Serial):
         else:
             exit(-1)
 
-    def command(self, c):
+    def command(self, c: str) -> None:
+        #writes a command to the device terminal
         super.write(c + "\r\n")
 
-    def readSetting(self, c):
+    def commandRes(self, c: str) -> str:
+        #reads a setting/ command from device terminal (Command Response)
         output = ''
         super.write(c + "\r\n")
         time.sleep(0.5)
@@ -82,106 +92,45 @@ class zumlink(serial.Serial):
             return "error"
         return output
 
-    def getDeviceSettings(self):
-        info = {}
-        info["firmware"] = readSetting("FirmwareVersion")
-        info["name"]     = readSetting("deviceName")
-        info["Serial"]   = readSetting("deviceSerialNumber")
-        return info
-
-    def send(self, dataFile):
+    def send(self, dataFile: str) -> None:
+        #writes data to the serial port device
         super.write(open(dataFile, "rb").read())
 
-    def recv(self):
-        print(super.readline().decode("utf-8"))
-
-    def __del__(self):
-        super.__del__()
-        exit(-1)    
-
-class Gateway(zumlink):
-
-    configuration = {
-
-        "radioSettings":
-        [
-            "radioMode=Gateway",
-            "rfDataRate=RATE_1M",
-            "txPower=30",
-            "frequencyKey=0",
-            "networkId=77777"
-            "radioFrequency=915.0000",
-            "radioHoppingMode=Hopping_On",
-            "beaconInterval=ONE_HUNDRED_MS",
-            "beaconBurstCount=1",
-            "lnaBypass=0",
-            #"maxLinkDistanceInMiles=10",    #distance to change probably
-            "maxPacketSize=900"             #packet sizes to change probably
-        ],
-        "serialPortConfig":
-        [
-            "cliBaudRate=115200",
-            "packetizedBaudRate=3000000",
-            "passthruBaudRate=3000000",
-            "databits=8",
-            "parity=None",
-            "stopbits=1",
-            "flowControl=Hardware",
-            "passthruLatencyMode=Auto",
-            "passthruLatencyTimer=16"
-        ]
-    }
-
-    def __init__(self, device, custom_config=None):
-        if custom_config != None:
-            self.configuration = custom_config
-        super.__init__(device)
+    def recv(self) -> str:
+        #reads data from the serial port device
+        return super.readline().decode("utf-8")
+        
+    def setup(self, configuration: dict) -> None:
         for setting in configuration["radioSettings"]:
             super.command("radioSettings."+setting)
         for setting in configuration["serialPortConfig"]:
             super.command("serialPortConfig."+setting)
         super.command("save")
+        print("CONFIGURATION COMPLETED")
 
-class Endpoint(zumlink):
+  
 
-    configuration = {
-        "radioSettings" :
-        [
-            "radioMode=Endpoint",
-            "rfDataRate=RATE_1M",
-            "txPower=30",
-            "networkId=77777",
-            "frequencyKey=0",
-            "radioFrequency=915.0000",
-            "radioHoppingMode=Hopping_On",
-            "beaconInterval=ONE_HUNDRED_MS",
-            "beaconBurstCount=1",
-            "lnaBypass=0",
-            #"maxLinkDistanceInMiles=10" #milage to change
-            "maxPacketSize=900"         #packet size to change
-        ],
-        "serialPortConfig":
-        [
-            "cliBaudRate=115200",
-            "packetizedBaudRate=3000000",
-            "passthruBaudRate=3000000",
-            "databits=8",
-            "parity=None",
-            "stopbits=1",
-            "flowControl=Hardware",
-            "passthruLatency=Auto",
-            "passthruLatencyTimer=16"
-        ]
-    }
+"""             Get Zumlink class to work first
+
+class Gateway(zumlink):
+
+    configuration = generate_config(radioMode="Gateway", txPower=0)
 
     def __init__(self, device, custom_config=None):
         super.__init__(device)
         if custom_config != None:
             self.configuration = custom_config
-        for setting in configuration["radioSettings"]:
-            super.command("radioSetting."+setting)
-        for setting in configuration["serialPortConfig"]:
-            super.command("serialPortConfig."+setting)
-        super.command("save")
+        super.setup(self.configuration)
 
+class Endpoint(zumlink):
+
+    configuration = generate_config(txPower=0)
+
+    def __init__(self, device, custom_config=None):
+        super.__init__(device)
+        if custom_config != None:
+            self.configuration = custom_config
+        super.setup(self.configuration)
+
+"""
     
