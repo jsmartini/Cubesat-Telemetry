@@ -2,7 +2,7 @@ import serial
 import json
 import time
 
-def generate_config(radioMode = "Endpoint", rfDataRate = "RATE_1M", txPower=10, networkId = 77777, frequencyKey=0, radioFrequency=915.0000, radioHoppingMode="Hopping_On", beaconInterval=ONE_HUNDRED_MS, beaconBurstCount=1, lnaBypass=0, maxLinkDistanceInMiles=5, maxPacketSize=900, cliBaudRate=115200, packetizedBaudRate=3000000, passthruBaudRate = 3000000, databits=8, parity="None", stopbits=1, flowControl="Hardware", passthruLatencyMode="auto", passthruLatencyTimer=16):
+def generate_config(radioMode = "Endpoint", rfDataRate = "RATE_1M", txPower=10, networkId = 77777, frequencyKey=0, radioFrequency=915.0000, radioHoppingMode="Hopping_On", beaconInterval="ONE_HUNDRED_MS", beaconBurstCount=1, lnaBypass=0, maxLinkDistanceInMiles=5, maxPacketSize=900, cliBaudRate=115200, packetizedBaudRate=3000000, passthruBaudRate = 3000000, databits=8, parity="None", stopbits=1, flowControl="Hardware", passthruLatencyMode="auto", passthruLatencyTimer=16):
     return {
         "radioSettings":[
             "radioMode={0}".format(radioMode),
@@ -42,6 +42,7 @@ class zumlink(serial.Serial):
         try:
             #baudrate might be wrong
             super().__init__(device, btyesize = serial.EIGHTBITS, baudrate = 9600, stopbits = serial.STOPBITS_ONE)
+            assert super.isOpen() == True
         except:
             raise serial.SerialException("Device Not Setup")
             exit(-1)
@@ -51,9 +52,9 @@ class zumlink(serial.Serial):
     def getDeviceSettings(self):
         #function pulls basic settings off of the device        
         info = {}
-        info["firmware"] = commandRes("FirmwareVersion")
-        info["name"]     = commandRes("deviceName")
-        info["Serial"]   = commandRes("deviceSerialNumber")
+        info["firmware"] = self.commandRes("FirmwareVersion")
+        info["name"]     = self.commandRes("deviceName")
+        info["Serial"]   = self.commandRes("deviceSerialNumber")
         return info
 
     def Terminal(self):
