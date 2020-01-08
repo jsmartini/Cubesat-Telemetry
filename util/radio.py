@@ -111,7 +111,7 @@ class zumlink(serial.Serial):
 
   
 
-"""             Get Zumlink class to work first
+"""             Debug Zumlink class first
 
 class Gateway(zumlink):
 
