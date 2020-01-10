@@ -34,3 +34,4 @@ while 1:
         output = z.read(1)
         if output != '':
             print(output.decode(), end='')
+
