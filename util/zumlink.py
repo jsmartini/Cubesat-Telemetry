@@ -62,9 +62,11 @@ class zumlink(serial.Serial):
                     #if req == "send()":
                     #   req = input("FILENAME:\t")
                     #   self.send(req)
+            
             if req == "send()":
                 dataFile = input("Data File for Transfer:\t")
                 self.send(dataFile=dataFile)
+                continue
 
             req = req.encode()
             super.write(req + b'\r\n')
@@ -89,6 +91,7 @@ class zumlink(serial.Serial):
         assert super.isOpen() == True
         for radioSetting in settings["radioSettings"]:
             self.command("radioSettings." + radioSetting)
+        
         """Serial settings should not change, but uncomment if needed
         for serialSetting in settings["serialSettings"]:
             self.command("serialSettings." + serialSetting)
@@ -100,6 +103,10 @@ class Gateway(zumlink):
         super.__init__(device)
         super.setup(settings = setttings)
 
+    def transmit():
+        #to be implemented
+        pass
+
 class Endpoint(zumlink):
     #endpoint node in the network
     def __init__(self, device:str, datafile = "flightLog.data",settings = generate_config(radioMode="Endpoint", txPower=30))
@@ -108,5 +115,13 @@ class Endpoint(zumlink):
         if os.path.exists("./"+datafile):
             os.mknod("./"+datafile)
         self.logname = datafile
+
+    def listen():
+        if not os.path.exits(self.logname):
+            f = open(self.logname)
+            while 1:
+                f.write(super.recv())
+        
+
 
             
