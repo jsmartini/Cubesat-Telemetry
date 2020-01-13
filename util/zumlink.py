@@ -35,23 +35,26 @@ def generate_config(radioMode = "Endpoint", rfDataRate = "RATE_1M", txPower=10, 
 class zumlink(serial.Serial):
 
     def __init__(self, device: str):
-        super.__init__(
+        super().__init__(
             port = device,
             bytesize = serial.EIGHTBITS,
             stopbits = serial.STOPBITS_ONE,
             baudrate = 9600
         )
         #making sure connection is open
-        assert super.isOpen() == True
+        assert super().isOpen() == True
         print("{0} Connection opened".format(device))
+        print(self.command(c="radioSettings"))
+        time.sleep(1)
 
     def command(self, c: str) -> str:
-        assert super.isOpen() == True
+        assert super().isOpen() == True
         #test function
-        super.write(c.encode() + b"\r\n")
+        super().write(c.encode() + b"\r\n")
         output = b''
-        while super.inWaiting() > 0:
-            output += super.read(1)
+        time.sleep(0.5)
+        while super().inWaiting() > 0:
+            output += super().read(1)
         return output.decode()
 
     def terminal(self):
@@ -68,40 +71,52 @@ class zumlink(serial.Serial):
                 self.send(dataFile=dataFile)
                 continue
 
+            if req == "msg()":
+                #debug for transmitting
+                data = input("msg:\t").encode()
+                self.send(msg=data)
+
+            if req == "recv()":
+                while 1:
+                    print(self.recv())
+
             req = req.encode()
-            super.write(req + b'\r\n')
+            super().write(req + b'\r\n')
             output = b''
             time.sleep(0.5) #set at half second, if device doesnt res increment
-            while super.inWaiting() > 0:
-                output = z.read(1)
+            while super().inWaiting() > 0:
+                output = super().read(1)
                 if output != '':
                     print(output.decode(), end='')
 
     def send(self, dataFile: str) -> None:
         #writes data to the serial port device
         #to be tested
-        super.write(open(dataFile, "rb").read())
+        super().write(open(dataFile, "rb").read())
+
+    def send(self, msg: bytes):
+        super().write(msg)
 
     def recv(self) -> str:
         #to be tested
         #reads data from the serial port device
-        return super.readline().decode("utf-8")
+        return super().readline().decode("utf-8")
 
     def setup(self, settings = generate_config()):
-        assert super.isOpen() == True
+        assert super().isOpen() == True
         for radioSetting in settings["radioSettings"]:
             self.command("radioSettings." + radioSetting)
         
         """Serial settings should not change, but uncomment if needed
         for serialSetting in settings["serialSettings"]:
-            self.command("serialSettings." + serialSetting)
+            self.command("serialPortConfig." + serialSetting)
         """
 
 class Gateway(zumlink):
     #gateway node in the network
     def __init__(self, device: str, settings = generate_config(radioMode="Gateway", txPower=30)):
-        super.__init__(device)
-        super.setup(settings = setttings)
+        super().__init__(device)
+        super().setup(settings = setttings)
 
     def transmit():
         #to be implemented
@@ -109,9 +124,9 @@ class Gateway(zumlink):
 
 class Endpoint(zumlink):
     #endpoint node in the network
-    def __init__(self, device:str, datafile = "flightLog.data",settings = generate_config(radioMode="Endpoint", txPower=30))
-        super.__init__(device)
-        super.setup(settings = settings)
+    def __init__(self, device:str, datafile = "flightLog.data",settings = generate_config(radioMode="Endpoint", txPower=30)):
+        super().__init__(device)
+        super().setup(settings = settings)
         if os.path.exists("./"+datafile):
             os.mknod("./"+datafile)
         self.logname = datafile
@@ -120,8 +135,8 @@ class Endpoint(zumlink):
         if not os.path.exits(self.logname):
             f = open(self.logname)
             while 1:
-                f.write(super.recv())
-        
-
+                f.write(super().recv())
+        else:
+            f = open(self.logname)
 
             
