@@ -34,17 +34,32 @@ def generate_config(radioMode = "Endpoint", rfDataRate = "RATE_1M", txPower=10, 
 
 class zumlink(serial.Serial):
 
-    def __init__(self, device: str):
-        super().__init__(
-            port = device,
-            bytesize = serial.EIGHTBITS,
-            stopbits = serial.STOPBITS_ONE,
-            baudrate = 9600
-        )
+    def __init__(self, device: str, mode = True):
+        #True -> baud: 30000000 (I think the actual radio socket)
+        #False -> baud:9600 Terminal
+
+
+        if mode:
+            #data transfer mode?
+            super().__init__(
+                port = device,
+                bytesize = serial.EIGHTBITS,
+                stopbits = serial.STOPBITS_ONE,
+                baudrate = 3000000
+                )
+        else:
+            #terminal mode
+            super().__init__(
+                port = device,
+                bytesize = serial.EIGHTBITS,
+                stopbits = serial.STOPBITS_ONE,
+                baudrate = 9600
+            )
         #making sure connection is open
         assert super().isOpen() == True
         print("{0} Connection opened".format(device))
-        print(self.command(c="radioSettings"))
+        if not mode:
+            print(self.command(c="radioSettings"))
         time.sleep(1)
 
     def command(self, c: str) -> str:
@@ -101,6 +116,21 @@ class zumlink(serial.Serial):
         #to be tested
         #reads data from the serial port device
         return super().readline().decode("utf-8")
+
+    def transmit_test(self):
+        assert super().isOpen() == True
+        print("Transmit Debug Terminal")
+        while 1:
+            req = input(">>>")
+            if req == "echo":
+                msg = input("msg:\t")
+                self.send(msg = msg.encode())
+    
+    def recv_test(self):
+        assert super().isOpen() == True
+        while 1:
+            time.sleep(0.5)
+            print(recv())
 
     def setup(self, settings = generate_config()):
         assert super().isOpen() == True
