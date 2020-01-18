@@ -1,5 +1,5 @@
 # Cubesat-Telemetry
-telemetry system code
+telemetry system code (generic test scripts)
 
 ARA Phobos Rocket Competition Cubesat Telemetry and Sensor Data Collection software
 
